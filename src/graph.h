@@ -30,4 +30,6 @@ void add_edge_to_node(pnode node, pedge edge);
 void clear_node_edges(pnode node);
 
 int dijkstra(pnode head, int start, int end);
+int tsp(pnode head, int *nodes, int number_of_nodes);
+
 #endif
