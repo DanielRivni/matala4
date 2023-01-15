@@ -40,7 +40,7 @@ int main()
     {
         if (scanf("%c", &choice) <= 0)
         {
-            return 0;
+            break;
         }
 
         switch (choice)

@@ -31,18 +31,26 @@ pnode create_graph(int nodes)
     return p;
 }
 
+void free_edges(pedge edges)
+{
+    pedge current = edges;
+    while (current != NULL)
+    {
+        pedge next = current->next;
+        free(current);
+        current = next;
+    }
+}
+
 void delete_graph(pnode head)
 {
-    if (head == NULL)
+    pnode current = head;
+    while (current != NULL)
     {
-        return;
-    }
-
-    pnode p = head;
-    while (p != NULL)
-    {
-        delete_node(p, p->node_num);
-        p = p->next;
+        pnode next = current->next;
+        free_edges(current->edges);
+        free(current);
+        current = next;
     }
 }
 
