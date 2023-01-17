@@ -53,7 +53,6 @@ int main()
             if (head != NULL)
             {
                 delete_graph(head);
-                free(head);
             }
             head = create_graph(nodes);
             break;
@@ -64,7 +63,7 @@ int main()
 
             result = dijkstra(head, start, end);
 
-            printf("Dijsktra shortest path: %d\n", result);
+            printf("Dijsktra shortest path: %d \n", result);
 
             break;
 
@@ -115,13 +114,14 @@ int main()
             }
 
             result = tsp(head, tsp_nodes, number_of_nodes);
-            printf("TSP shortest path: %d\n", result);
+            printf("TSP shortest path: %d \n", result);
 
             free(tsp_nodes);
             break;
 
         case '\n':
-            break;
+            delete_graph(head);
+            return 0;
         }
     }
 

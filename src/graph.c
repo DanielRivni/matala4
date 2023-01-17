@@ -164,7 +164,7 @@ void delete_node(pnode head, int node_number)
         return;
     }
 
-    pnode p = NULL;
+    pnode p = head;
     p = head;
     while (p != NULL)
     {
@@ -188,6 +188,7 @@ void delete_node(pnode head, int node_number)
                 head = p->next;
             }
 
+            free_edges(p->edges);
             free(p);
             return;
         }
@@ -292,48 +293,71 @@ int get_graph_nodes(pnode head)
     return i;
 }
 
-int get_highest_node_number(pnode head)
+pnode get_node_by_index(pnode head, int index)
 {
-    int max = 0;
-
+    int i = 0;
     pnode p = head;
     while (p != NULL)
     {
-        if (p->node_num > max)
+        if (i == index)
         {
-            max = p->node_num;
+            return p;
         }
         p = p->next;
+        i++;
     }
-    return max;
+    return NULL;
+}
+
+int get_node_index(pnode head, int node_num)
+{
+    int i = 0;
+    pnode p = head;
+    while (p != NULL)
+    {
+        if (p->node_num == node_num)
+        {
+            return i;
+        }
+        i++;
+        p = p->next;
+    }
+    return -1;
 }
 
 int dijkstra(pnode head, int start, int end)
 {
-    int num_nodes = get_highest_node_number(head) + 1;
+    int num_nodes = get_graph_nodes(head);
+    int start_index = get_node_index(head, start);
+    int end_index = get_node_index(head, end);
 
-    if (start == -1 || end == -1)
+    if (start_index == -1 || end_index == -1)
     {
         return -1;
     }
 
-    int *distances = malloc(num_nodes * sizeof(int));
-    int *visited = calloc(num_nodes, sizeof(int));
+    int *distances = (int *)malloc(num_nodes * sizeof(int));
+    int *visited = (int *)malloc(num_nodes * sizeof(int));
     int min_distance = INT_MAX;
-    int next_node = 0;
     pnode current_node = NULL;
     pedge current_edge = NULL;
 
+    // initialize distances
     for (int i = 0; i < num_nodes; i++)
     {
         distances[i] = INT_MAX;
+        visited[i] = 0;
     }
 
-    distances[start] = 0;
+    // distance to start itself is 0
+    distances[start_index] = 0;
 
     for (int i = 0; i < num_nodes; i++)
     {
         min_distance = INT_MAX;
+        int next_node = -1;
+
+        // find min distance for next search
         for (int j = 0; j < num_nodes; j++)
         {
             if (!visited[j] && distances[j] < min_distance)
@@ -343,24 +367,29 @@ int dijkstra(pnode head, int start, int end)
             }
         }
 
-        visited[next_node] = 1;
-        current_node = get_node(head, next_node);
-        if (current_node != NULL)
+        if (next_node != -1)
         {
-            current_edge = current_node->edges;
-            while (current_edge != NULL)
+            visited[next_node] = 1;
+            current_node = get_node_by_index(head, next_node);
+            if (current_node != NULL)
             {
-                if (distances[next_node] + current_edge->weight < distances[current_edge->endpoint->node_num])
+                current_edge = current_node->edges;
+                while (current_edge != NULL)
                 {
-                    distances[current_edge->endpoint->node_num] = distances[next_node] + current_edge->weight;
+                    // if found a lower distance, override current one
+                    int index = get_node_index(head, current_edge->endpoint->node_num);
+                    if (index != -1 && distances[next_node] != INT_MAX && distances[next_node] + current_edge->weight < distances[index])
+                    {
+                        distances[index] = distances[next_node] + current_edge->weight;
+                    }
+                    current_edge = current_edge->next;
                 }
-
-                current_edge = current_edge->next;
             }
         }
     }
 
-    int result = distances[end];
+    // return distance to end
+    int result = distances[end_index];
 
     free(distances);
     free(visited);
@@ -425,11 +454,13 @@ int tsp(pnode head, int *nodes, int number_of_nodes)
     int count = 0;
     permute(nodes, 0, number_of_nodes - 1, paths, &count);
 
-    int *results = (int *)calloc(sizeof(int), number_of_permutation);
+    int *results = (int *)malloc(sizeof(int) * number_of_permutation);
 
     // for each permutation, sum path weight
     for (int i = 0; i < number_of_permutation; i++)
     {
+        results[i] = 0;
+
         for (int j = 0; j < number_of_nodes - 1; j++)
         {
             int d = dijkstra(head, paths[i][j], paths[i][j + 1]);
